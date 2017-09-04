@@ -428,8 +428,14 @@ def main(f=sys.stdin):
     for line in f.readlines():
         sz, name = line[:-1].split(None, 1)
 #       name = name.split("/")
-        sz = int(sz)*1024
-        putname(files, name, sz)
+        
+        try: # For normal lines of du output
+            sz = long(sz)*1024
+            putname(files, name, sz)
+        except ValueError: # For error lines of du output, which is caused by 'Permission denied' when accessing certain folders of other users.
+            pass # do nothing (if met with permission error)!
+            #print "Something went wrong {!s}".format(line)   # the problem value 
+
     doit(name, files)
 
 
