@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #    This is tkdu.py, an interactive program to display disk usage
 #    Copyright 2004 Jeff Epler <jepler@unpythonic.net>
@@ -23,23 +23,9 @@ import stat
 import time
 import gzip
 
-try:
-    import Tkinter as tkinter
-except ImportError:
-    import tkinter
-
-try:
-    from FileDialog import LoadFileDialog
-except ImportError:
-    from tkinter.filedialog import LoadFileDialog
-
-try:
-    from tkFileDialog import askdirectory
-except ImportError:
-    from tkinter.filedialog import askdirectory
-
-import codecs
-from io import open
+import tkinter
+from tkinter.filedialog import LoadFileDialog
+from tkinter.filedialog import askdirectory
 
 MIN_PSZ = 1000
 MIN_IPSZ = 240
@@ -430,7 +416,7 @@ def main(f=sys.stdin):
 #       name = name.split("/")
         
         try: # For normal lines of du output
-            sz = long(sz)*1024
+            sz = int(sz)*1024
             putname(files, name, sz)
         except ValueError: # For error lines of du output, which is caused by 'Permission denied' when accessing certain folders of other users.
             pass # do nothing (if met with permission error)!
@@ -550,12 +536,7 @@ def main_builtin_du(args):
         p = abspath(p)
         if os.path.isfile(p):
             if p.endswith('.gz'):
-                # gzipped file
-                fp0 = gzip.open(p, 'rb')
-                fp = codecs.getreader('utf-8')(fp0, errors='replace')
-                main(fp)
-                # python3 offers a simpler instruction:
-                # main(gzip.open(p, 'rt', encoding="utf-8", errors='replace'))
+                main(gzip.open(p, 'rt', encoding="utf-8", errors='replace'))
             else:
                 main(open(p, 'rt', encoding="utf-8", errors='replace'))
         else:
