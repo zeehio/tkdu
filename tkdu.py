@@ -27,6 +27,13 @@ import tkinter
 from tkinter.filedialog import LoadFileDialog
 from tkinter.filedialog import askdirectory
 
+# Limit the number of printed error messages from parsing `du -ak` output
+ERRORS_FOUND_THRESHOLD = 10 # type: Optional[int]
+# Limit the graphical representation of directories/files nested more than
+# LEVELS_DEEP_THRESHOLD to reduce tkdu memory usage.
+LEVELS_DEEP_THRESHOLD = None # type: Optional[int]
+
+
 MIN_PSZ = 1000
 MIN_IPSZ = 240
 MIN_W = 50
@@ -410,10 +417,21 @@ def setdepth(e, c, i):
 def main(f=sys.stdin):
     files = {}
     firstfile = None
-    for line in f.readlines():
-        sz, name = line[:-1].split(None, 1)
-#       name = name.split("/")
-        
+    errors_found = 0
+    for linenum, line in enumerate(f.readlines()):
+        try:
+            sz, name = line[:-1].split(None, 1)
+        except ValueError:
+            errors_found += 1
+            if ERRORS_FOUND_THRESHOLD is None or errors_found < ERRORS_FOUND_THRESHOLD:
+                print("Skip line " + str(linenum+1) + ". Content: " + line[:-1])
+            elif errors_found == ERRORS_FOUND_THRESHOLD:
+                print("Further skip line errors are silenced")
+            continue
+        levels_deep = name.count("/")
+        # Skip representation of nested directories beyond LEVELS_DEEP_THRESHOLD
+        if LEVELS_DEEP_THRESHOLD is not None and levels_deep > LEVELS_DEEP_THRESHOLD:
+            continue
         try: # For normal lines of du output
             sz = int(sz)*1024
             putname(files, name, sz)
